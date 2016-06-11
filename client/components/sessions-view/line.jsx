@@ -12,6 +12,7 @@ import $ from 'jquery';
 export default class Chart extends React.Component {
   constructor(props) {
     super(props);
+    console.log(JSON.stringify(this.props.data));
     this.state = {
       chartData: this.props.data,
       width: 800,
@@ -19,44 +20,52 @@ export default class Chart extends React.Component {
       chartId: 'v1_chart',
       tooltip:{ display:false,data:{key:'',value:''}}
     };
+    console.log('after setting state: ', JSON.stringify(this.state));
   }
 
   componentDidMount() {
-    // this.setState({
-    //   width:this.props.width
-    // })
 
+    console.log('state IN COMPONENET DID MOUNT is: ', JSON.stringify(this.state)); 
   } 
 
   showToolTip(e) {
     e.target.setAttribute('fill', '#FFFFFF');
+
+
+    console.log('state BEFORE is: ', JSON.stringify(this.state)); 
  
-    // this.setState({tooltip:
-    //   {
-    //     display:true,
-    //     data: {
-    //         key:e.target.getAttribute('data-key'),
-    //         value:e.target.getAttribute('data-value')
-    //         },
-    //     pos:{
-    //         x:e.target.getAttribute('cx'),
-    //         y:e.target.getAttribute('cy')
-    //     }
-    //   }
-    // }); 
+    this.setState({tooltip:
+      {
+        display:true,
+        data: {
+            key:e.target.getAttribute('data-key'),
+            value:e.target.getAttribute('data-value')
+            },
+        pos:{
+            x:e.target.getAttribute('cx'),
+            y:e.target.getAttribute('cy')
+        }
+      }
+    });
+    console.log('state AFTER is: ', JSON.stringify(this.state)); 
   }
   
   hideToolTip(e) {
     e.target.setAttribute('fill', '#7dc7f4');
-    // this.setState({tooltip:
-    //   { 
-    //     display:false,
-    //     data:{key:'',value:''}
-    //   }
-    // });
+
+        console.log("this is a mouse OFF");
+
+    this.setState({tooltip:
+      { 
+        display:false,
+        data:{key:'',value:''}
+      }
+    });
   }
 
   render() {
+    console.log('inside of rendering for the first time, i need my data: ', JSON.stringify(this.state.chartData));
+    var copyData = this.state.chartData.slice();
     var margin = {top: 5, right: 50, bottom: 20, left: 50},
         w = this.state.width - (margin.left + margin.right),
         h = this.state.height - (margin.top + margin.bottom);
@@ -67,7 +76,7 @@ export default class Chart extends React.Component {
  
     // updated!
     var y = d3.scale.linear()
-        .domain([0,d3.max(this.state.chartData,function(d){
+        .domain([0,d3.max(copyData,function(d){
             return d.score+4;
         })])
         .range([h, 0]);
@@ -81,7 +90,6 @@ export default class Chart extends React.Component {
         .y(function (d) {
             return y(d.score);
         }).interpolate('cardinal');
-
     var transform='translate(' + margin.left + ',' + margin.top + ')';
 
     var yAxis = d3.svg.axis()
@@ -92,7 +100,7 @@ export default class Chart extends React.Component {
     var xAxis = d3.svg.axis()
       .scale(x)
       .orient('bottom')
-      .tickValues(this.state.chartData.map(function(d,i){
+      .tickValues(copyData.map(function(d,i){
         if(i>0)
           return d.index;
       }).splice(1))
@@ -112,8 +120,8 @@ export default class Chart extends React.Component {
                 <Grid h={h} grid={yGrid} gridType="y"/>
                 <Axis h={h} axis={yAxis} axisType="y" />
                 <Axis h={h} axis={xAxis} axisType="x"/>
-                <path className="session-line session-shadow" d={line(this.state.chartData)} strokeLinecap="round"/>
-                <Dots data={this.state.chartData} x={x} y={y} showToolTip={this.showToolTip.bind(this)} hideToolTip={this.hideToolTip.bind(this)}/>
+                <path className="session-line session-shadow" d={line(copyData)} strokeLinecap="round"/>
+                <Dots data={copyData} x={x} y={y} showToolTip={this.showToolTip.bind(this)} hideToolTip={this.hideToolTip.bind(this)}/>
                 <ToolTip tooltip={this.state.tooltip}/> 
               </g>
             </svg>

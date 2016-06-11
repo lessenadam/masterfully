@@ -35,9 +35,11 @@ export default class SessionsView extends React.Component {
       success: function(data) {
         callback(data);
         this._getAllSnapshotInfo(function(data) {
+          console.log('upstream1', calculatePerformance(data));
           this.setState({
             performanceData:calculatePerformance(data)
           });
+          console.log('upstream2', this.state.performanceData);
         }.bind(this));
         
       }.bind(this),
