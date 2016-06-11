@@ -2,17 +2,15 @@
 
 var React = require('react');
 var ReactDOM = require('react-dom');
-// var Chart = require('react-d3-core').Chart;
-// var LineChart = require('react-d3-basic').LineChart;
-// import rd3 from 'rd3';
-// var LineChart = rd3.LineChart;
 import $ from 'jquery';
+import { ordinal_suffix_of } from './../../lib/helpers';
+import { browserHistory } from 'react-router';
+
 
 
 export default class Chart extends React.Component {
   constructor(props) {
     super(props);
-    console.log(JSON.stringify(this.props.data));
     this.state = {
       chartData: this.props.data,
       width: 800,
@@ -20,20 +18,18 @@ export default class Chart extends React.Component {
       chartId: 'v1_chart',
       tooltip:{ display:false,data:{key:'',value:''}}
     };
-    console.log('after setting state: ', JSON.stringify(this.state));
   }
 
   componentDidMount() {
 
-    console.log('state IN COMPONENET DID MOUNT is: ', JSON.stringify(this.state)); 
   } 
+
+  _showSessionReport(index) {
+    browserHistory.push('/reports/' + this.state.chartData[index].sessionId);
+  }
 
   showToolTip(e) {
     e.target.setAttribute('fill', '#FFFFFF');
-
-
-    console.log('state BEFORE is: ', JSON.stringify(this.state)); 
- 
     this.setState({tooltip:
       {
         display:true,
@@ -47,13 +43,11 @@ export default class Chart extends React.Component {
         }
       }
     });
-    console.log('state AFTER is: ', JSON.stringify(this.state)); 
   }
   
   hideToolTip(e) {
     e.target.setAttribute('fill', '#7dc7f4');
 
-        console.log("this is a mouse OFF");
 
     this.setState({tooltip:
       { 
@@ -64,21 +58,20 @@ export default class Chart extends React.Component {
   }
 
   render() {
-    console.log('inside of rendering for the first time, i need my data: ', JSON.stringify(this.state.chartData));
     var copyData = this.state.chartData.slice();
-    var margin = {top: 5, right: 50, bottom: 20, left: 50},
+    var margin = {top: 20, right: 50, bottom: 20, left: 50},
         w = this.state.width - (margin.left + margin.right),
         h = this.state.height - (margin.top + margin.bottom);
 
     var x = d3.scale.linear()
-        .domain([0,10])
+        .domain([0,d3.max(copyData, function(d){
+                return d.index + 1;
+            })])
         .rangeRound([0, w]);
  
     // updated!
     var y = d3.scale.linear()
-        .domain([0,d3.max(copyData,function(d){
-            return d.score+4;
-        })])
+        .domain([0,10])
         .range([h, 0]);
 
     // updated!
@@ -101,9 +94,8 @@ export default class Chart extends React.Component {
       .scale(x)
       .orient('bottom')
       .tickValues(copyData.map(function(d,i){
-        if(i>0)
-          return d.index;
-      }).splice(1))
+        return d.index;
+      }))
       .ticks(4);
      
     var yGrid = d3.svg.axis()
@@ -114,15 +106,18 @@ export default class Chart extends React.Component {
       .tickFormat("");
 
     return (
-          <div>
+          <div className='sessions-svg-container'>
+            <h3>Performance Over Time</h3>
             <svg id={this.props.chartId} width={this.state.width} height={this.state.height}>
               <g transform={transform}>
                 <Grid h={h} grid={yGrid} gridType="y"/>
                 <Axis h={h} axis={yAxis} axisType="y" />
                 <Axis h={h} axis={xAxis} axisType="x"/>
                 <path className="session-line session-shadow" d={line(copyData)} strokeLinecap="round"/>
-                <Dots data={copyData} x={x} y={y} showToolTip={this.showToolTip.bind(this)} hideToolTip={this.hideToolTip.bind(this)}/>
+                <Dots data={copyData} x={x} y={y} goToSession={this._showSessionReport.bind(this)} showToolTip={this.showToolTip.bind(this)} hideToolTip={this.hideToolTip.bind(this)}/>
                 <ToolTip tooltip={this.state.tooltip}/> 
+                <text className='axis-label' text-anchor='middle' transform='translate(-50,200)rotate(-90)'>Score</text>
+                <text className='axis-label' text-anchor='middle' transform='translate(300,415)'>Session #</text>
               </g>
             </svg>
           </div>
@@ -133,15 +128,15 @@ export default class Chart extends React.Component {
 var Dots = (props) => {
   var _self=this;
  
-        //remove last & first point
-  var data = props.data.splice(1);
-  data.pop();
+        // dont remove last & first point
+  var data = props.data;
 
  var circles = data.map(function(d,i){
- 
-    return (<circle className="dot" r="7" cx={props.x(d.index)} cy={props.y(d.score)} fill="#7dc7f4"
+
+    return (<circle className="sessions-dot" r="7" cx={props.x(d.index)} cy={props.y(d.score)} fill="#7dc7f4"
                     stroke="#3f5175" strokeWidth="5px" key={i}
-                    onMouseOver={props.showToolTip} onMouseOut={props.hideToolTip}
+                    onMouseOver={props.showToolTip} onMouseOut={props.hideToolTip} onClick={function(e) {
+                      props.goToSession(e.target.getAttribute('data-key') - 1)}}
                     data-key={d.index} data-value={d.score}/>)
     });
   
@@ -248,8 +243,8 @@ var ToolTip = (props) => {
                 <polygon class="shadow" is points="10,0  30,0  20,10" transform={transformArrow}
                          fill="#6391da" opacity=".9" visibility={visibility}/>
                 <text is visibility={visibility} transform={transformText}>
-                    <tspan is x="0" text-anchor="middle" font-size="15px" fill="#ffffff">{props.tooltip.data.key}</tspan>
-                    <tspan is x="0" text-anchor="middle" dy="25" font-size="20px" fill="#a9f3ff">{props.tooltip.data.value+" visits"}</tspan>
+                    <tspan is x="0" text-anchor="middle" font-size="15px" fill="#ffffff">{ordinal_suffix_of(props.tooltip.data.key) + ' Session:'}</tspan>
+                    <tspan is x="0" text-anchor="middle" dy="25" font-size="20px" fill="#a9f3ff">{props.tooltip.data.value + ' points'}</tspan>
                 </text>
             </g>
         );

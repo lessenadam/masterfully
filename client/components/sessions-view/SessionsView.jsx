@@ -69,6 +69,8 @@ export default class SessionsView extends React.Component {
     });
   }
 
+  
+
   render() {
     if (!this.state.performanceData) {
       return <div>Loading...</div>;

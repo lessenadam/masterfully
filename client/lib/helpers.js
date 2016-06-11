@@ -47,7 +47,7 @@ module.exports = {
     }
     data = data.sort((a,b) => a-b);
     _.forEach(data, (sessionId, index) => 
-        data[index] = {score:results[sessionId], index:index}
+        data[index] = {score:(Math.round(results[sessionId]*10)/10), index:index + 1, sessionId:sessionId}
       )
 
 
