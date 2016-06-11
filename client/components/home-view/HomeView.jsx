@@ -31,7 +31,6 @@ export default class HomeView extends React.Component {
   render() {
     return (
       <div className="view home-view">
-
         <div className="home-view-message">Hello, <span ref="firstName"></span>.</div>
         <h4 className="home-view-welcome">Welcome to masterfully.</h4>
         <div className="quote">

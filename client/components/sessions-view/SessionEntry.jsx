@@ -15,6 +15,7 @@ export default class SessionEntry extends React.Component {
     return (
       <div className="session-entry-block" onClick={this.showSessionReport.bind(this)}>
         <div className="session-entry-title">{ordinal_suffix_of(this.props.index + 1) + ' Session'}</div>
+        <i className="fa fa-user fa-4" aria-hidden="true"></i>
         <div className="session-entry-date">
           <span className="label">Date: </span>
           <span className="value">{this.props.entry.date}</span>
